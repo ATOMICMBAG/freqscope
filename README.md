@@ -112,7 +112,7 @@ Dann im Browser öffnen: **http://localhost:5173**
    → Du siehst eine schmale Kurve bei 440 Hz im Spektrum
 
 > Die Einführung oben in der App lässt sich jederzeit über den Button
-> **„ℹ Einführung ein-/ausblenden“** wieder anzeigen oder verbergen.
+> **„Einführung ein-/ausblenden“** wieder anzeigen oder verbergen.
 
 ---
 
@@ -305,6 +305,4 @@ Details: [LICENSE](LICENSE)
 - GitHub: [@ATOMICMBAG](https://github.com/ATOMICMBAG)
 - Website: [maazi.de](https://maazi.de)
 
----
-
-_ ^_^ freqscope v1.0 — „Das Unsichtbare sichtbar machen."\_
+^_^ freqscope v1.0 — „Das Unsichtbare sichtbar machen."
