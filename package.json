@@ -1,0 +1,19 @@
+{
+  "name": "freqscope",
+  "version": "1.0.0",
+  "description": "Mini-Spektrumanalysator im Browser – FFT, Wasserfall, SCPI-Terminal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "lint": "eslint src --ext .js"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

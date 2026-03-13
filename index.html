@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="freqscope – Mini-Spektrumanalyer im Browser. FFT, Wasserfall, SCPI-Terminal."
+    />
+    <title>Freqscope — Audio Spektrumanalyer</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- ═══════════════════════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════════════════════ -->
+    <header id="app-header">
+      <div class="header-left">
+        <span class="logo">maazi.de</span>
+        <span class="logo-mark">▌</span>
+        <span class="logo-text">Freqscope</span>
+        <span class="logo-sub">Audio Spektrumanalyer</span>
+      </div>
+      <div class="header-right">
+        <div class="readout-group">
+          <span class="readout-label">PEAK</span>
+          <span class="readout-value" id="peak-freq">–.– Hz</span>
+        </div>
+        <div class="readout-group">
+          <span class="readout-label">PEAK dB</span>
+          <span class="readout-value" id="peak-db">–.– dBFS</span>
+        </div>
+        <div class="readout-group">
+          <span class="readout-label">CENTER</span>
+          <span class="readout-value" id="center-freq">–.– Hz</span>
+        </div>
+        <div class="readout-group">
+          <span class="readout-label">SPAN</span>
+          <span class="readout-value" id="span-freq">–.– Hz</span>
+        </div>
+        <div class="status-indicator" id="status-led" title="Status">
+          <span class="led" id="led-dot"></span>
+          <span class="led-label" id="led-label">BEREIT</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════
+         MAIN
+    ═══════════════════════════════════════════════════════ -->
+    <main id="app-main">
+      <!-- ── Guided ── -->
+      <button
+        id="btn-guide-toggle"
+        class="btn-secondary btn-small"
+        title="Hilfe ein- oder ausblenden"
+      >
+        ℹ Hilfe ausblenden
+      </button>
+      <!-- ── Guided Banner ── -->
+      <section id="guided-banner" class="guided-banner">
+        <div class="guided-text">
+          <h2>Freqscope — Audio Spektrumanalyer</h2>
+          <p>
+            <strong>Freqscope</strong> arbeitet wie ein kompakter
+            <strong>Spektrumanalyer für den Audiobereich</strong>: Du siehst
+            sofort, welche Frequenzen in einem Signal dominieren, wie hoch ihr
+            Pegel ist und wie sich das Spektrum über die Zeit verändert. Damit
+            eignet sich die Ansicht ideal für Mikrofonprüfung, Signalkontrolle,
+            Resonanzsuche und experimentelle Messungen.
+          </p>
+          <p class="guided-note">
+            <strong>Für Spectrum-Interessierte,</strong> die Darstellung folgt
+            der Logik klassischer Messgeräte mit <strong>Peak</strong>,
+            <strong>Center</strong>, <strong>Span</strong> und
+            <strong>Wasserfall</strong> – nur hier im hörbaren Frequenzbereich.
+            Unten steht zusätzlich ein Testton-Generator bereit;
+            <strong>bitte immer leise starten</strong> und den Warnhinweis bei
+            scharfen Wellenformen beachten.
+          </p>
+        </div>
+      </section>
+
+      <!-- ── Canvas-Bereich ── -->
+      <section id="canvas-section">
+        <!-- Spectrum -->
+        <div class="canvas-wrap" id="spectrum-wrap">
+          <div class="canvas-label">SPEKTRUM (dBFS)</div>
+          <canvas id="spectrum-canvas"></canvas>
+          <div class="canvas-overlay" id="spectrum-overlay">
+            <span>Klicke auf „Mikrofon starten"</span>
+          </div>
+        </div>
+
+        <!-- Waterfall -->
+        <div class="canvas-wrap" id="waterfall-wrap">
+          <div class="canvas-label">WASSERFALL</div>
+          <canvas id="waterfall-canvas"></canvas>
+          <div class="canvas-overlay" id="waterfall-overlay">
+            <span>Wartet auf Eingabe …</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Controls ── -->
+      <section id="controls-section">
+        <div class="controls-row">
+          <button
+            id="btn-start-mic"
+            class="btn-primary btn-large"
+            title="Mikrofon aktivieren"
+          >
+            <span class="btn-icon">🎙</span> Mikrofon starten
+          </button>
+          <button id="btn-mic-toggle" class="btn-secondary" disabled>
+            <span id="mic-btn-icon">🎙</span>
+            <span id="mic-btn-text">Mikrofon I|O</span>
+          </button>
+          <button
+            id="btn-pause"
+            class="btn-secondary"
+            disabled
+            title="Analyse pausieren"
+          >
+            ⏸ Pause
+          </button>
+          <button
+            id="btn-clear"
+            class="btn-secondary"
+            title="Wasserfall löschen"
+          >
+            ⟳ Clear
+          </button>
+
+          <div class="spacer"></div>
+
+          <label class="file-label btn-nerd" title="Audio-Datei laden">
+            <input type="file" id="file-input" accept="audio/*,.csv" />
+            <span>⚙ Eigene Ton Daten laden .waf ,...</span>
+          </label>
+
+          <button
+            id="btn-nerd-toggle"
+            class="btn-nerd"
+            title="Nerd-Modus ein/ausblenden"
+          >
+            ⚙ Nerd‑Mode <span id="nerd-arrow">▼</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════
+           NERD PANEL
+      ══════════════════════════════ -->
+      <section id="nerd-panel" class="nerd-panel collapsed">
+        <div class="nerd-grid">
+          <!-- ── DSP ── -->
+          <div class="nerd-card">
+            <div class="nerd-card-title">DSP‑Parameter</div>
+
+            <div class="param-row">
+              <label for="sel-fft-size">FFT‑Size</label>
+              <select id="sel-fft-size">
+                <option value="1024">1024</option>
+                <option value="2048">2048</option>
+                <option value="4096" selected>4096</option>
+                <option value="8192">8192</option>
+              </select>
+            </div>
+
+            <div class="param-row">
+              <label for="sel-window">Fensterfunktion</label>
+              <select id="sel-window">
+                <option value="hann" selected>Hann</option>
+                <option value="hamming">Hamming</option>
+                <option value="blackman">Blackman</option>
+                <option value="rect">Rechteck</option>
+              </select>
+            </div>
+
+            <div class="param-row">
+              <label for="rng-smoothing"
+                >Smoothing <span id="smoothing-val">0.25</span></label
+              >
+              <input
+                type="range"
+                id="rng-smoothing"
+                min="0"
+                max="0.95"
+                step="0.05"
+                value="0.25"
+              />
+            </div>
+
+            <div class="param-row">
+              <label for="sel-peak-hold">Peak‑Hold</label>
+              <select id="sel-peak-hold">
+                <option value="off" selected>Aus</option>
+                <option value="hold">Hold</option>
+                <option value="decay">Decay</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ── Anzeige ── -->
+          <div class="nerd-card">
+            <div class="nerd-card-title">Anzeige</div>
+
+            <div class="param-row">
+              <label for="rng-db-min"
+                >dB min <span id="dbmin-val">−120</span></label
+              >
+              <input
+                type="range"
+                id="rng-db-min"
+                min="-140"
+                max="-40"
+                step="5"
+                value="-120"
+              />
+            </div>
+
+            <div class="param-row">
+              <label for="rng-db-max"
+                >dB max <span id="dbmax-val">0</span></label
+              >
+              <input
+                type="range"
+                id="rng-db-max"
+                min="-40"
+                max="0"
+                step="5"
+                value="0"
+              />
+            </div>
+
+            <div class="param-row">
+              <label for="sel-colormap">Farbpalette</label>
+              <select id="sel-colormap">
+                <option value="turbo" selected>Turbo</option>
+                <option value="viridis">Viridis</option>
+                <option value="gray">Gray</option>
+                <option value="hot">Hot</option>
+              </select>
+            </div>
+
+            <div class="param-row">
+              <label for="rng-freq-min"
+                >Freq‑min (Hz) <span id="freqmin-val">0</span></label
+              >
+              <input
+                type="range"
+                id="rng-freq-min"
+                min="0"
+                max="200000"
+                step="100"
+                value="0"
+              />
+            </div>
+
+            <div class="param-row">
+              <label for="rng-freq-max"
+                >Freq‑max (Hz) <span id="freqmax-val">22050</span></label
+              >
+              <input
+                type="range"
+                id="rng-freq-max"
+                min="20"
+                max="200000"
+                step="100"
+                value="22050"
+              />
+            </div>
+          </div>
+
+          <!-- ── Konfig ── -->
+          <div class="nerd-card">
+            <div class="nerd-card-title">Konfiguration</div>
+
+            <div class="param-row stacked">
+              <button id="btn-export-config" class="btn-secondary btn-full">
+                ⬇ Export .json
+              </button>
+              <label class="file-label btn-full">
+                <input type="file" id="config-file-input" accept=".json" />
+                <span>⬆ Import .json</span>
+              </label>
+              <button id="btn-reset-config" class="btn-danger btn-full">
+                ↺ Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- ── SCPI Terminal ── -->
+          <div class="nerd-card nerd-card-wide">
+            <div class="nerd-card-title">
+              SCPI‑Terminal <span class="badge">INSTRUMENT‑MOCK</span>
+            </div>
+
+            <div
+              id="scpi-output"
+              class="scpi-output"
+              aria-live="polite"
+              role="log"
+            ></div>
+
+            <div class="scpi-input-row">
+              <span class="scpi-prompt">&gt;</span>
+              <input
+                type="text"
+                id="scpi-input"
+                placeholder="z.B. *IDN? oder :SENS:FREQ:CENT 1000"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button id="btn-scpi-send" class="btn-secondary">Senden</button>
+            </div>
+
+            <div class="scpi-hints">
+              <button class="scpi-chip" data-cmd="*IDN?">*IDN?</button>
+              <button class="scpi-chip" data-cmd=":SENS:FREQ:CENT?">
+                CENT?
+              </button>
+              <button class="scpi-chip" data-cmd=":SENS:FREQ:SPAN?">
+                SPAN?
+              </button>
+              <button class="scpi-chip" data-cmd=":TRAC:DATA? TRACE1">
+                TRACE1?
+              </button>
+              <button class="scpi-chip" data-cmd=":SENS:FREQ:CENT 1000">
+                CENT 1kHz
+              </button>
+              <button class="scpi-chip" data-cmd=":SENS:FREQ:SPAN 2000">
+                SPAN 2kHz
+              </button>
+              <button class="scpi-chip" data-cmd=":DISP:WIND:TRAC:Y:RLEV 0">
+                RLEV 0
+              </button>
+              <button class="scpi-chip" data-cmd="*RST">*RST</button>
+            </div>
+          </div>
+        </div>
+        <!-- /nerd-grid -->
+      </section>
+
+      <section id="tone-section" class="tone-section">
+        <div class="tone-header">
+          <span class="tone-title">Testton-Generator</span>
+          <button id="btn-tone-toggle" class="btn-tone">Start</button>
+          <select id="sel-wave-type" class="wave-select">
+            <option value="sine">Sinus</option>
+            <option value="square">Rechteck</option>
+            <option value="sawtooth">Sägezahn</option>
+            <option value="triangle">Dreieck</option>
+          </select>
+        </div>
+
+        <div class="tone-keyboard" id="tone-keyboard"></div>
+
+        <div class="tone-freq-row">
+          <label for="rng-tone-freq">Hz</label>
+          <input
+            type="range"
+            id="rng-tone-freq"
+            min="0"
+            max="1000"
+            step="1"
+            value="447"
+          />
+          <input
+            type="number"
+            id="num-tone-freq"
+            min="20"
+            max="200000"
+            step="0.01"
+            value="440"
+          />
+          <span id="tone-active-note" class="tone-active-note">A4 440 Hz</span>
+        </div>
+
+        <div class="tone-volume-row">
+          <label for="rng-tone-volume">Lautstärke</label>
+          <input
+            type="range"
+            id="rng-tone-volume"
+            min="0"
+            max="0.3"
+            step="0.01"
+            value="0.08"
+          />
+          <input
+            type="number"
+            id="num-tone-volume"
+            min="0"
+            max="0.3"
+            step="0.01"
+            value="0.08"
+          />
+          <span id="tone-volume-note" class="tone-volume-note"
+            >Leise Startlautstärke</span
+          >
+        </div>
+
+        <div class="tone-warning" role="note" aria-live="polite">
+          <strong>Sicherheitshinweis:</strong>
+          Starte Testtöne immer leise. Schnelle Tonwechsel sowie harte
+          Wellenformen wie Rechteck oder Sägezahn können als unangenehm,
+          stressig oder irritierend empfunden werden. Wenn ein Ton nach dem
+          Stoppen subjektiv noch kurz „nachwirkt“ oder Unwohlsein auslöst,
+          Lautstärke reduzieren und eine Pause machen.
+          <strong>Log-Slider von 20 Hz bis 200 kHz</strong>. Oberhalb der halben
+          Audio-Sample-Rate können Browser und Audio-Hardware den Ton nicht mehr
+          physikalisch korrekt ausgeben; es kann zu Alias-Effekten oder
+          Spiegelungen kommen. Nutze externe Tongeneratoren um Frequency Hopping
+          Spread Spectrum zu erzeugen.
+        </div>
+      </section>
+      <!-- /nerd-panel -->
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════════════════ -->
+    <footer id="app-footer">
+      <span>Freqscope v1.0 — MIT License</span>
+      <span
+        >Besem Maazi ·
+        <a href="https://maazi.de" target="_blank" rel="noopener"
+          >maazi.de</a
+        ></span
+      >
+      <span id="footer-sample-rate">SR: –</span>
+      <span id="footer-fft-info">FFT: –</span>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
