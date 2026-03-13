@@ -111,7 +111,7 @@ Dann im Browser öffnen: **http://localhost:5173**
 3. Oder: Scrolle nach unten zum **Testton-Generator** und klicke auf **„A4"**  
    → Du siehst eine schmale Kurve bei 440 Hz im Spektrum
 
-> 💡 Die Einführung oben in der App lässt sich jederzeit über den Button
+> Die Einführung oben in der App lässt sich jederzeit über den Button
 > **„ℹ Einführung ein-/ausblenden“** wieder anzeigen oder verbergen.
 
 ---
@@ -188,7 +188,7 @@ docker compose ps
 
 Die App läuft jetzt auf **Port 4173**: `http://deine-server-ip:4173`
 
-> ⚠️ **HTTPS ist Pflicht für Mikrofon!**  
+> **HTTPS ist Pflicht für Mikrofon!**  
 > Browser erlauben Mikrofon-Zugriff nur über HTTPS oder localhost.  
 > Für HTTPS: Certbot + Nginx Reverse-Proxy verwenden (siehe [DEPLOY.md](DEPLOY.md)).
 
@@ -301,9 +301,9 @@ Details: [LICENSE](LICENSE)
 
 **Besem Maazi**
 
-- 🌐 Projektsite: [freqscope.maazi.de](https://freqscope.maazi.de)
-- 🐙 GitHub: [@ATOMICMBAG](https://github.com/ATOMICMBAG)
-- 🌐 Website: [maazi.de](https://maazi.de)
+- Projektsite: [freqscope.maazi.de](https://freqscope.maazi.de)
+- GitHub: [@ATOMICMBAG](https://github.com/ATOMICMBAG)
+- Website: [maazi.de](https://maazi.de)
 
 ---
 
