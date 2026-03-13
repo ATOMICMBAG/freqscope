@@ -2,6 +2,8 @@
 
 ![pic](freqscope.maazi.de.jpg)
 
+https://freqscope.maazi.de/
+
 > **Browserbasierter Echtzeit-Spektrumanalyer** — ohne Installation, ohne Backend, direkt im Browser.
 
 [![MIT License](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
@@ -306,3 +308,4 @@ Details: [LICENSE](LICENSE)
 - Website: [maazi.de](https://maazi.de)
 
 ^_^ freqscope v1.0 — „Das Unsichtbare sichtbar machen."
+
