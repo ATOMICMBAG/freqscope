@@ -1,4 +1,4 @@
-# 🎛️ freqscope
+# 🎛️ freqscope.maazi.de
 
 ![pic](freqscope.maazi.de.jpg)
 
@@ -308,4 +308,5 @@ Details: [LICENSE](LICENSE)
 - Website: [maazi.de](https://maazi.de)
 
 ^_^ freqscope v1.0 — „Das Unsichtbare sichtbar machen."
+
 
